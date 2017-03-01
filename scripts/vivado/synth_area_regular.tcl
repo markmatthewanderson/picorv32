@@ -2,7 +2,7 @@ read_verilog ../../picorv32.v
 read_verilog synth_area_top.v
 read_xdc synth_area.xdc
 
-synth_design -part xc7k70t-fbg676 -top top_regular
+synth_design -part xc7a100tftg256-2 -top top_regular
 opt_design -sweep -propconst -resynth_seq_area
 opt_design -directive ExploreSequentialArea
 

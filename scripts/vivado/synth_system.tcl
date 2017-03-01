@@ -3,7 +3,7 @@ read_verilog system.v
 read_verilog ../../picorv32.v
 read_xdc synth_system.xdc
 
-synth_design -part xc7a35t-cpg236-1 -top system
+synth_design -part xc7a100tftg256-2 -top system
 opt_design
 place_design
 route_design
