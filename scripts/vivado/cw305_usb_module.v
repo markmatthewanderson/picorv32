@@ -30,7 +30,7 @@ either expressed or implied, of NewAE Technology Inc.
 //Defines how long after we keep data-bus active - shouldn't need to change
 `define REG_RDDLY_LEN 3
 
-module usb_module(
+module cw305_usb_module(
     input wire        clk_usb,      // Raw clock signal from external USB connections
     inout wire [7:0]  data,     // Data bus
     input wire [20:0] addr,     // Address bus

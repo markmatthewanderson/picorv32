@@ -34,188 +34,121 @@ either expressed or implied, of NewAE Technology Inc.
 module cw305_top(
     
     /****** USB Interface ******/
-    input wire        usb_clk, /* Clock */
-    inout wire [7:0]  usb_data,/* Data for write/read */
-    input wire [20:0] usb_addr,/* Address data */
-    input wire        usb_rdn, /* !RD, low when addr valid for read */
-    input wire        usb_wrn, /* !WR, low when data+addr valid for write */
-    input wire        usb_cen, /* !CE not used */
-    input wire        usb_trigger, /* High when trigger requested */
+    input wire        cw305_usb_clk, /* Clock */
+    inout wire [7:0]  cw305_usb_data,/* Data for write/read */
+    input wire [20:0] cw305_usb_addr,/* Address data */
+    input wire        cw305_usb_rdn, /* !RD, low when addr valid for read */
+    input wire        cw305_usb_wrn, /* !WR, low when data+addr valid for write */
+    input wire        cw305_usb_cen, /* !CE not used */
+    input wire        cw305_usb_trigger, /* High when trigger requested */
     
     /****** Buttons/LEDs on Board ******/
-    input wire sw1, /* DIP switch J16 */
-    input wire sw2, /* DIP switch K16 */
-    input wire sw3, /* DIP switch K15 */
-    input wire sw4, /* DIP Switch L14 */
+    input wire cw305_sw1, /* DIP switch J16 */
+    input wire cw305_sw2, /* DIP switch K16 */
+    input wire cw305_sw3, /* DIP switch K15 */
+    input wire cw305_sw4, /* DIP Switch L14 */
     
-    input wire pushbutton, /* Pushbutton SW4, connected to R1 */
+    input wire cw305_pushbutton, /* Pushbutton SW4, connected to R1 */
     
-    output wire led1, /* red LED */
-    output wire led2, /* green LED */
-    output wire led3,  /* blue LED */
+    output wire cw305_led1, /* red LED */
+    output wire cw305_led2, /* green LED */
+    output wire cw305_led3,  /* blue LED */
     
     /****** PLL ******/
-    input wire pll_clk1, //PLL Clock Channel #1
+    input wire cw305_pll_clk1, //PLL Clock Channel #1
     //input wire pll_clk2, //PLL Clock Channel #2
     
     /****** 20-Pin Connector Stuff ******/
-    output wire tio_trigger,
-    output wire tio_clkout,
-    input  wire tio_clkin
-    
-    /***** Block Interface to Crypto Core *****/
-/*`ifdef USE_BLOCK_INTERFACE
-    ,output wire crypto_clk,
-    output wire crypto_rst,
-    output wire [`CRYPTO_TEXT_WIDTH-1:0] crypto_textout,
-    output wire [`CRYPTO_KEY_WIDTH-1:0] crypto_keyout,
-    input  wire [`CRYPTO_CIPHER_WIDTH-1:0] crypto_cipherin,
-    output wire crypto_start,
-    input wire crypto_ready,
-    input wire crypto_done,
-    input wire crypto_idle
-`endif*/
+    output wire cw305_tio_trigger,
+    output wire cw305_tio_clkout,
+    input  wire cw305_tio_clkin
     );
     
-    wire usb_clk_buf;
+    wire cw305_usb_clk_buf;
     
     /* USB CLK Heartbeat */
-    reg [24:0] usb_timer_heartbeat;
-    always @(posedge usb_clk_buf) usb_timer_heartbeat <= usb_timer_heartbeat +  25'd1;
-    assign led1 = usb_timer_heartbeat[24];
+    reg [24:0] cw305_usb_timer_heartbeat;
+    always @(posedge cw305_usb_clk_buf) cw305_usb_timer_heartbeat <= cw305_usb_timer_heartbeat +  25'd1;
+    assign cw305_led1 = cw305_usb_timer_heartbeat[24];
     
     /* CRYPT CLK Heartbeat */
-    reg [22:0] crypt_clk_heartbeat;
-    always @(posedge crypt_clk) crypt_clk_heartbeat <= crypt_clk_heartbeat +  23'd1;
-    assign led2 = crypt_clk_heartbeat[22];
+    reg [22:0] cw305_crypt_clk_heartbeat;
+    always @(posedge cw305_crypt_clk) cw305_crypt_clk_heartbeat <= cw305_crypt_clk_heartbeat +  23'd1;
+    assign cw305_led2 = cw305_crypt_clk_heartbeat[22];
                    
     /* Connections between crypto module & registers */
-    wire crypt_clk;    
-    wire [`CRYPTO_TEXT_WIDTH-1:0] crypt_key;
-    wire [`CRYPTO_TEXT_WIDTH-1:0] crypt_textout;
-    wire [`CRYPTO_CIPHER_WIDTH-1:0] crypt_cipherin;
-    wire crypt_init;
-    wire crypt_ready;
-    wire crypt_start;
-    wire crypt_done;
+    wire cw305_crypt_clk;    
+    wire [`CRYPTO_TEXT_WIDTH-1:0] cw305_crypt_key;
+    wire [`CRYPTO_TEXT_WIDTH-1:0] cw305_crypt_textout;
+    wire [`CRYPTO_CIPHER_WIDTH-1:0] cw305_crypt_cipherin;
+    wire cw305_crypt_init;
+    wire cw305_crypt_ready;
+    wire cw305_crypt_start;
+    wire cw305_crypt_done;
     
     /******* USB Interface ****/
-    wire [1024*8-1:0] memory_input;
-    wire [1024*8-1:0] memory_output;
+    wire [1024*8-1:0] cw305_memory_input;
+    wire [1024*8-1:0] cw305_memory_output;
     // Set up USB with memory registers
-    usb_module #(
+    cw305_usb_module #(
         .MEMORY_WIDTH(10) // 2^10 = 1024 = 0x400 bytes each for input and output memory
-    )my_usb(
-        .clk_usb(usb_clk),
-        .data(usb_data),
-        .addr(usb_addr),
-        .rd_en(usb_rdn),
-        .wr_en(usb_wrn),
-        .cen(usb_cen),
-        .trigger(usb_trigger),
-        .clk_sys(usb_clk_buf),
-        .memory_input(memory_input),
-        .memory_output(memory_output)
+    )cw305_my_usb(
+        .clk_usb(cw305_usb_clk),
+        .data(cw305_usb_data),
+        .addr(cw305_usb_addr),
+        .rd_en(cw305_usb_rdn),
+        .wr_en(cw305_usb_wrn),
+        .cen(cw305_usb_cen),
+        .trigger(cw305_usb_trigger),
+        .clk_sys(cw305_usb_clk_buf),
+        .memory_input(cw305_memory_input),
+        .memory_output(cw305_memory_output)
     );   
     
     /******* REGISTERS ********/
-    registers  #(
+    cw305_registers  #(
         .MEMORY_WIDTH(10) // 2^10 = 1024 = 0x400 bytes each for input and output memory
-    ) reg_inst (
-        .mem_clk(usb_clk_buf),
-        .mem_input(memory_input),
-        .mem_output(memory_output),
+    ) cw305_reg_inst (
+        .mem_clk(cw305_usb_clk_buf),
+        .mem_input(cw305_memory_input),
+        .mem_output(cw305_memory_output),
               
-        .user_led(led3),
-        .dipsw_1(sw1),
-        .dipsw_2(sw2),
+        .user_led(cw305_led3),
+        .dipsw_1(cw305_sw1),
+        .dipsw_2(cw305_sw2),
                 
-        .exttrigger_in(usb_trigger),
+        .exttrigger_in(cw305_usb_trigger),
         
-        .pll_clk1(pll_clk1),
-        .cw_clkin(tio_clkin),
-        .cw_clkout(tio_clkout),
+        .pll_clk1(cw305_pll_clk1),
+        .cw_clkin(cw305_tio_clkin),
+        .cw_clkout(cw305_tio_clkout),
        
         .crypt_type(8'h02),
         .crypt_rev(8'h03),
         
-        .cryptoclk(crypt_clk),
-        .key(crypt_key),
-        .textin(crypt_textout),
-        .cipherout(crypt_cipherin),
+        .cryptoclk(cw305_crypt_clk),
+        .key(cw305_crypt_key),
+        .textin(cw305_crypt_textout),
+        .cipherout(cw305_crypt_cipherin),
                
-        .init(crypt_init),
-        .ready(crypt_ready),
-        .start(crypt_start),
-        .done(crypt_done)        
+        .init(cw305_crypt_init),
+        .ready(cw305_crypt_ready),
+        .start(cw305_crypt_start),
+        .done(cw305_crypt_done)        
     );
   
-  /* Block interface is used by the IP Catalog. If you are using block-based
-     design define USE_BLOCK_INTERFACE in board.v .
-  */
-/*`ifdef USE_BLOCK_INTERFACE
-    assign crypto_clk = crypt_clk;
-    assign crypto_rst = crypt_init;
-    assign crypto_keyout = crypt_key;
-    assign crypto_textout = crypt_textout;
-    assign crypt_cipherin = crypto_cipherin;
-    assign crypto_start = crypt_start;
-    assign crypt_ready = crypto_ready;
-    assign crypt_done = crypto_done;
-    assign tio_trigger = ~crypto_idle;
-`endif*/
-  /******** START CRYPTO MODULE CONNECTIONS ****************/  
-   /* The following can have your crypto module inserted.
-   
-      This is an example of the Goolge Vault AES module.
-      
-      You can use the ILA to view waveforms if needed, which
-      requires an external USB-JTAG adapter (such as Xilinx Platform
-      Cable USB).
-   */
 
-
-/*`ifdef GOOGLE_VAULT_AES
-   wire aes_clk;
-   wire [127:0] aes_key;
-   wire [127:0] aes_pt;
-   wire [127:0] aes_ct;
-   wire aes_load;
-   wire aes_busy;
-  
-   assign aes_clk = crypt_clk;
-   assign aes_key = crypt_key;
-   assign aes_pt = crypt_textout;
-   assign crypt_cipherin = aes_ct;
-   assign aes_load = crypt_start;
-   assign crypt_ready = 1'b1;
-   assign crypt_done = ~aes_busy;
- 
-   // Example AES Core 
-   aes_core aes_core (
-       .clk(aes_clk),
-       .load_i(aes_load),
-       .key_i({aes_key, 128'h0}),
-       .data_i(aes_pt),
-       .size_i(2'd0), //AES128
-       .dec_i(1'b0),//enc mode
-       .data_o(aes_ct),
-       .busy_o(aes_busy)
-   );
-   assign tio_trigger = aes_busy;
-`endif*/
-
-    /* Begin CESEL Setup and Connections */
-    wire CESEL_busy;
-    assign crypt_done = ~CESEL_busy;
+    /* Begin cw305_axi Setup and Connections */
+    wire cw305_axi_busy;
+    assign crypt_done = ~cw305_axi_busy;
     
-    CESEL_test CESEL_test (
-        .clk(crypt_clk),
-        .start(crypt_start),
-        //.key(crypt_key),
-        //.pt(crypt_textout),
-        .ct(crypt_cipherin),
-        .busy(CESEL_busy)
+    cw305_axi cw305_axi (
+        .clk(cw305_crypt_clk),
+        .start(cw305_crypt_start),
+        //.key(cw305_crypt_key),
+        //.pt(cw305_crypt_textout),
+        .ct(cw305_crypt_cipherin),
+        .busy(cw305_cw305_axi_busy)
     );
          
    /******** END CRYPTO MODULE CONNECTIONS ****************/

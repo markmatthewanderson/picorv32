@@ -91,7 +91,7 @@ either expressed or implied, of NewAE Technology Inc.
 `define REG_CRYPT_CIPHERIN  21'h300
 
 
-module registers(
+module cw305_registers(
     /* Interface to Memory Bus */
     input wire           mem_clk,
     output wire [MEMORY_BYTES*8-1:0]  mem_output,
