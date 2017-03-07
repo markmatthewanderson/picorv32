@@ -48,14 +48,14 @@ module cw305_top(
     input wire cw305_sw3, /* DIP switch K15 */
     input wire cw305_sw4, /* DIP Switch L14 */
     
-    input wire cw305_pushbutton, /* Pushbutton SW4, connected to R1 */
+    input wire resetn, /* Pushbutton SW4, connected to R1 */
     
     output wire cw305_led1, /* red LED */
     output wire cw305_led2, /* green LED */
     output wire cw305_led3,  /* blue LED */
     
     /****** PLL ******/
-    input wire cw305_pll_clk1, //PLL Clock Channel #1
+    input wire clk, //PLL Clock Channel #1
     //input wire pll_clk2, //PLL Clock Channel #2
     
     /****** 20-Pin Connector Stuff ******/
@@ -119,7 +119,7 @@ module cw305_top(
                 
         .exttrigger_in(cw305_usb_trigger),
         
-        .pll_clk1(cw305_pll_clk1),
+        .pll_clk1(clk),
         .cw_clkin(cw305_tio_clkin),
         .cw_clkout(cw305_tio_clkout),
        
