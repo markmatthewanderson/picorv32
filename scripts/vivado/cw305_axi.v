@@ -11,15 +11,15 @@
 
 
 module cw305_axi(
-    //input wire clk,         //CESEL clock
-    //input wire start,       //start signal to CESEL
+    input wire clk,         //CESEL clock
+    input wire start,       //start signal to CESEL
     //input wire [127:0] key, //crypto key
     //input wire [127:0] pt,  //plaintext input to CESEL
-    //output reg [127:0] ct,  //ciphertext output from CESEL
-    //output reg busy         //busy signal from CESEL
+    output reg [127:0] ct,  //ciphertext output from CESEL
+    output reg busy         //busy signal from CESEL
 );
 
-/*always @(posedge clk)
+always @(posedge clk)
 begin
     busy <= 0;
     if(start)
@@ -32,6 +32,6 @@ begin
         ct <= 'hdeadbeefdeadbeefdeadbeefdeadbeef;
         busy <= 0;
     end
-end*/
+end
 
-endmodule/
+endmodule

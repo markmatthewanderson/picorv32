@@ -1,6 +1,10 @@
 
 read_verilog system.v
 read_verilog ../../picorv32.v
+#add Chipwhisperer Files
+read_verilog cw305_axi.v
+read_verilog cw305_registers.v
+read_verilog cw305_usb_module.v
 read_xdc synth_system.xdc
 
 synth_design -part xc7a100tftg256-2 -top system

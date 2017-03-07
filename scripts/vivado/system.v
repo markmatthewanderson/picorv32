@@ -1,18 +1,18 @@
 `timescale 1 ns / 1 ps
 
 // ChipWhisperer defined
-`default_nettype none 
+//`default_nettype none 
 `define CRYPTO_KEY_WIDTH 128
 `define CRYPTO_TEXT_WIDTH 128
 `define CRYPTO_CIPHER_WIDTH 128
 
 module system (
 	// PicoRV Connections
-	input            clk,
-	input            resetn,
+	input     	 clk,
+	input	         resetn,
 	output           trap,
 	output reg [7:0] out_byte,
-	output reg       out_byte_en
+	output reg       out_byte_en,
 
 	// ChipWhisperer Connections
     	/****** USB Interface ******/
@@ -225,7 +225,7 @@ module system (
 
     	/* Begin cw305_axi Setup and Connections */
     	wire cw305_axi_busy;
-    	assign crypt_done = ~cw305_axi_busy;
+    	assign cw305_crypt_done = ~cw305_axi_busy;
     
     	cw305_axi cw305_axi (
         	.clk(cw305_crypt_clk),
@@ -233,7 +233,7 @@ module system (
         	//.key(cw305_crypt_key),
         	//.pt(cw305_crypt_textout),
         	.ct(cw305_crypt_cipherin),
-        	.busy(cw305_cw305_axi_busy)
+        	.busy(cw305_axi_busy)
     	);
          
    /******** END CRYPTO MODULE CONNECTIONS ****************/
