@@ -1,6 +1,7 @@
 
 read_verilog system.v
 read_verilog ../../picorv32.v
+read_verilog axi4_memory.v
 #add Chipwhisperer Files
 read_verilog cw305_axi.v
 read_verilog cw305_registers.v
