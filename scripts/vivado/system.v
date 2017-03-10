@@ -172,7 +172,7 @@ module system (
 	wire        mem_axi_rready;
 	wire [31:0] mem_axi_rdata;
 
-/*	axi4_memory 
+	axi4_memory 
 //#(
 		//.AXI_TEST (AXI_TEST),
 		//.VERBOSE  (VERBOSE)
@@ -202,7 +202,7 @@ module system (
 		.mem_axi_rdata   (mem_axi_rdata   )
 
 		//.tests_passed    (tests_passed    )
-	);*/
+	);
 
 	picorv32_axi #(
 		.ENABLE_REGS_DUALPORT(0),

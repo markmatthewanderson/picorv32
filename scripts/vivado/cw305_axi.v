@@ -60,7 +60,7 @@ end
 // on input from chipwhisperer over usb, start goes high. signal to picorv that read over AXI is valid and set "busy" output high
 // on input from picorv32 over AXI, load the AXI data in to "ct" output and set "busy" output low
  
-	reg [31:0]   memory [0:7]; // [0:3] for 128b plaintext, [4:7] for 128b ciphertext
+/*	reg [31:0]   memory [0:7]; // [0:3] for 128b plaintext, [4:7] for 128b ciphertext
 
 	reg latched_raddr_en = 0;
 	reg latched_waddr_en = 0;
@@ -171,5 +171,5 @@ end
 
 		if (!mem_axi_rvalid && latched_raddr_en && !delay_axi_transaction[3]) handle_axi_rvalid;
 		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && !delay_axi_transaction[4]) handle_axi_bvalid;
-	end
+	end*/
 endmodule

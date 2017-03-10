@@ -28,7 +28,7 @@ module axi4_memory
 	output reg [31:0] mem_axi_rdata
 );
 	reg [31:0]   memory [0:64*1024/4-1] /* verilator public */;
-
+/*
 	reg latched_raddr_en = 0;
 	reg latched_waddr_en = 0;
 	reg latched_wdata_en = 0;
@@ -46,7 +46,7 @@ module axi4_memory
 	reg [2:0] fast_axi_transaction = ~0;
 	reg [4:0] async_axi_transaction = ~0;
 	reg [4:0] delay_axi_transaction = 0;
-/*
+
 	task handle_axi_arvalid; begin
 		mem_axi_arready <= 1;
 		latched_raddr = mem_axi_araddr;
