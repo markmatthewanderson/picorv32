@@ -17,23 +17,6 @@ module cw305_axi(
     //input wire [127:0] pt,  //plaintext input to CESEL
     //output reg [127:0] ct,  //ciphertext output from CESEL
     //output reg busy         //busy signal from CESEL
-);
-/*
-always @(posedge clk)
-begin
-    busy <= 0;
-    if(start)
-    begin
-        busy <= 1;
-        ct <= 'h00000000000000000000000000000000;
-    end
-    else if(busy)
-    begin
-        ct <= 'hdeadbeefdeadbeefdeadbeefdeadbeef;
-        busy <= 0;
-    end
-end
-*/
 	input clk, resetn,
 	output trap,
 
@@ -60,4 +43,61 @@ end
 	input         mem_axi_rvalid,
 	output        mem_axi_rready,
 	input  [31:0] mem_axi_rdata
+);
+/*
+always @(posedge clk)
+begin
+    busy <= 0;
+    if(start)
+    begin
+        busy <= 1;
+        ct <= 'h00000000000000000000000000000000;
+    end
+    else if(busy)
+    begin
+        ct <= 'hdeadbeefdeadbeefdeadbeefdeadbeef;
+        busy <= 0;
+    end
+end
+*/
+	reg ack_awvalid;
+	reg ack_arvalid;
+	reg ack_wvalid;
+	reg xfer_done;
+
+	assign mem_axi_awvalid = mem_valid && |mem_wstrb && !ack_awvalid;
+	assign mem_axi_awaddr = mem_addr;
+	assign mem_axi_awprot = 0;
+
+	assign mem_axi_arvalid = mem_valid && !mem_wstrb && !ack_arvalid;
+	assign mem_axi_araddr = mem_addr;
+	assign mem_axi_arprot = mem_instr ? 3'b100 : 3'b000;
+
+	assign mem_axi_wvalid = mem_valid && |mem_wstrb && !ack_wvalid;
+	assign mem_axi_wdata = mem_wdata;
+	assign mem_axi_wstrb = mem_wstrb;
+
+	assign mem_ready = mem_axi_bvalid || mem_axi_rvalid;
+	assign mem_axi_bready = mem_valid && |mem_wstrb;
+	assign mem_axi_rready = mem_valid && !mem_wstrb;
+	assign mem_rdata = mem_axi_rdata;
+
+	always @(posedge clk) begin
+		if (!resetn) begin
+			ack_awvalid <= 0;
+		end else begin
+			xfer_done <= mem_valid && mem_ready;
+			if (mem_axi_awready && mem_axi_awvalid)
+				ack_awvalid <= 1;
+			if (mem_axi_arready && mem_axi_arvalid)
+				ack_arvalid <= 1;
+			if (mem_axi_wready && mem_axi_wvalid)
+				ack_wvalid <= 1;
+			if (xfer_done || !mem_valid) begin
+				ack_awvalid <= 0;
+				ack_arvalid <= 0;
+				ack_wvalid <= 0;
+			end
+		end
+	end
 endmodule
