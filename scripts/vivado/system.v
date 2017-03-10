@@ -142,6 +142,14 @@ module system (
 		end
 	end endgenerate
 */
+	reg [31:0] irq;
+
+	always @* begin
+		irq = 0;
+		irq[4] = &uut.picorv32_core.count_cycle[12:0];
+		irq[5] = &uut.picorv32_core.count_cycle[15:0];
+	end
+
 	wire        mem_axi_awvalid;
 	wire        mem_axi_awready;
 	wire [31:0] mem_axi_awaddr;
@@ -191,7 +199,7 @@ module system (
 		.mem_axi_rready  (mem_axi_rready  ),
 		.mem_axi_rdata   (mem_axi_rdata   ),
 
-		.tests_passed    (tests_passed    )
+		//.tests_passed    (tests_passed    )
 	);
 
 	picorv32_axi #(
@@ -229,8 +237,8 @@ module system (
 		.mem_axi_rready (mem_axi_rready ),
 		.mem_axi_rdata  (mem_axi_rdata  ),
 		.irq            (irq            ),
-		.trace_valid    (trace_valid    ),
-		.trace_data     (trace_data     )
+		//.trace_valid    (trace_valid    ),
+		//.trace_data     (trace_data     )
 	);
 
 	reg [1023:0] firmware_file;
@@ -346,12 +354,32 @@ module system (
     	assign cw305_crypt_done = ~cw305_axi_busy;
     
     	cw305_axi cw305_axi (
-        	.clk(cw305_crypt_clk),
-        	.start(cw305_crypt_start),
+        	//.clk(cw305_crypt_clk),
+        	//.start(cw305_crypt_start),
         	//.key(cw305_crypt_key),
         	//.pt(cw305_crypt_textout),
-        	.ct(cw305_crypt_cipherin),
-        	.busy(cw305_axi_busy)
+        	//.ct(cw305_crypt_cipherin),
+        	//.busy(cw305_axi_busy)
+		.clk            (clk            ),
+		.resetn         (resetn         ),
+		.trap           (trap           ),
+		.mem_axi_awvalid(mem_axi_awvalid),
+		.mem_axi_awready(mem_axi_awready),
+		.mem_axi_awaddr (mem_axi_awaddr ),
+		.mem_axi_awprot (mem_axi_awprot ),
+		.mem_axi_wvalid (mem_axi_wvalid ),
+		.mem_axi_wready (mem_axi_wready ),
+		.mem_axi_wdata  (mem_axi_wdata  ),
+		.mem_axi_wstrb  (mem_axi_wstrb  ),
+		.mem_axi_bvalid (mem_axi_bvalid ),
+		.mem_axi_bready (mem_axi_bready ),
+		.mem_axi_arvalid(mem_axi_arvalid),
+		.mem_axi_arready(mem_axi_arready),
+		.mem_axi_araddr (mem_axi_araddr ),
+		.mem_axi_arprot (mem_axi_arprot ),
+		.mem_axi_rvalid (mem_axi_rvalid ),
+		.mem_axi_rready (mem_axi_rready ),
+		.mem_axi_rdata  (mem_axi_rdata  )
     	);
          
    /******** END CRYPTO MODULE CONNECTIONS ****************/
