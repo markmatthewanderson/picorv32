@@ -2,11 +2,7 @@
 
 `timescale 1 ns / 1 ps
 
-module axi4_memory 
-//#(
-	//parameter AXI_TEST = 0,
-	//parameter VERBOSE = 0
-//) 
+module axi4_memory  
 (
 	input             clk,
 	input             mem_axi_awvalid,
@@ -29,40 +25,9 @@ module axi4_memory
 
 	output reg        mem_axi_rvalid = 0,
 	input             mem_axi_rready,
-	output reg [31:0] mem_axi_rdata,
-
-	//output reg tests_passed
+	output reg [31:0] mem_axi_rdata
 );
 	reg [31:0]   memory [0:64*1024/4-1] /* verilator public */;
-	//reg verbose;
-	//initial verbose = $test$plusargs("verbose") || VERBOSE;
-
-	//reg axi_test;
-	//initial axi_test = $test$plusargs("axi_test") || AXI_TEST;
-
-	//initial tests_passed = 0;
-
-	reg [63:0] xorshift64_state = 64'd88172645463325252;
-
-	task xorshift64_next;
-		begin
-			// see page 4 of Marsaglia, George (July 2003). "Xorshift RNGs". Journal of Statistical Software 8 (14).
-			xorshift64_state = xorshift64_state ^ (xorshift64_state << 13);
-			xorshift64_state = xorshift64_state ^ (xorshift64_state >>  7);
-			xorshift64_state = xorshift64_state ^ (xorshift64_state << 17);
-		end
-	endtask
-
-	reg [2:0] fast_axi_transaction = ~0;
-	reg [4:0] async_axi_transaction = ~0;
-	reg [4:0] delay_axi_transaction = 0;
-
-	always @(posedge clk) begin
-		if (axi_test) begin
-				xorshift64_next;
-				{fast_axi_transaction, async_axi_transaction, delay_axi_transaction} <= xorshift64_state;
-		end
-	end
 
 	reg latched_raddr_en = 0;
 	reg latched_waddr_en = 0;
@@ -78,6 +43,10 @@ module axi4_memory
 	reg [ 3:0] latched_wstrb;
 	reg        latched_rinsn;
 
+	reg [2:0] fast_axi_transaction = ~0;
+	reg [4:0] async_axi_transaction = ~0;
+	reg [4:0] delay_axi_transaction = 0;
+/*
 	task handle_axi_arvalid; begin
 		mem_axi_arready <= 1;
 		latched_raddr = mem_axi_araddr;
@@ -102,46 +71,19 @@ module axi4_memory
 	end endtask
 
 	task handle_axi_rvalid; begin
-		if(verbose)
-			$display("RD: ADDR=%08x DATA=%08x%s", latched_raddr, memory[latched_raddr >> 2], latched_rinsn ? " INSN" : "");
 		if (latched_raddr < 64*1024) begin
 			mem_axi_rdata <= memory[latched_raddr >> 2];
 			mem_axi_rvalid <= 1;
 			latched_raddr_en = 0;
-		end else begin
-			$display("OUT-OF-BOUNDS MEMORY READ FROM %08x", latched_raddr);
-			$finish;
 		end
 	end endtask
 
 	task handle_axi_bvalid; begin
-		if (verbose)
-			$display("WR: ADDR=%08x DATA=%08x STRB=%04b", latched_waddr, latched_wdata, latched_wstrb);
 		if (latched_waddr < 64*1024) begin
 			if (latched_wstrb[0]) memory[latched_waddr >> 2][ 7: 0] <= latched_wdata[ 7: 0];
 			if (latched_wstrb[1]) memory[latched_waddr >> 2][15: 8] <= latched_wdata[15: 8];
 			if (latched_wstrb[2]) memory[latched_waddr >> 2][23:16] <= latched_wdata[23:16];
 			if (latched_wstrb[3]) memory[latched_waddr >> 2][31:24] <= latched_wdata[31:24];
-		end else
-		if (latched_waddr == 32'h1000_0000) begin
-			if (verbose) begin
-				if (32 <= latched_wdata && latched_wdata < 128)
-					$display("OUT: '%c'", latched_wdata[7:0]);
-				else
-					$display("OUT: %3d", latched_wdata);
-			end else begin
-				$write("%c", latched_wdata[7:0]);
-`ifndef VERILATOR
-				$fflush();
-`endif
-			end
-		end else
-		if (latched_waddr == 32'h2000_0000) begin
-			if (latched_wdata == 123456789)
-				tests_passed = 1;
-		end else begin
-			$display("OUT-OF-BOUNDS MEMORY WRITE TO %08x", latched_waddr);
-			$finish;
 		end
 		mem_axi_bvalid <= 1;
 		latched_waddr_en = 0;
@@ -196,5 +138,5 @@ module axi4_memory
 
 		if (!mem_axi_rvalid && latched_raddr_en && !delay_axi_transaction[3]) handle_axi_rvalid;
 		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && !delay_axi_transaction[4]) handle_axi_bvalid;
-	end
+	end*/
 endmodule

@@ -17,32 +17,28 @@ module cw305_axi(
     //input wire [127:0] pt,  //plaintext input to CESEL
     //output reg [127:0] ct,  //ciphertext output from CESEL
     //output reg busy         //busy signal from CESEL
-	input clk, resetn,
-	output trap,
+	input             clk,
+	input             mem_axi_awvalid,
+	output reg        mem_axi_awready = 0,
+	input [31:0]      mem_axi_awaddr,
+	input [ 2:0]      mem_axi_awprot,
 
-	// AXI4-lite master memory interface
+	input            mem_axi_wvalid,
+	output reg       mem_axi_wready = 0,
+	input [31:0]     mem_axi_wdata,
+	input [ 3:0]     mem_axi_wstrb,
 
-	output        mem_axi_awvalid,
-	input         mem_axi_awready,
-	output [31:0] mem_axi_awaddr,
-	output [ 2:0] mem_axi_awprot,
+	output reg       mem_axi_bvalid = 0,
+	input            mem_axi_bready,
 
-	output        mem_axi_wvalid,
-	input         mem_axi_wready,
-	output [31:0] mem_axi_wdata,
-	output [ 3:0] mem_axi_wstrb,
+	input            mem_axi_arvalid,
+	output reg       mem_axi_arready = 0,
+	input [31:0]     mem_axi_araddr,
+	input [ 2:0]     mem_axi_arprot,
 
-	input         mem_axi_bvalid,
-	output        mem_axi_bready,
-
-	output        mem_axi_arvalid,
-	input         mem_axi_arready,
-	output [31:0] mem_axi_araddr,
-	output [ 2:0] mem_axi_arprot,
-
-	input         mem_axi_rvalid,
-	output        mem_axi_rready,
-	input  [31:0] mem_axi_rdata
+	output reg        mem_axi_rvalid = 0,
+	input             mem_axi_rready,
+	output reg [31:0] mem_axi_rdata
 );
 /*
 always @(posedge clk)
@@ -51,53 +47,129 @@ begin
     if(start)
     begin
         busy <= 1;
-        ct <= 'h00000000000000000000000000000000;
+        ct <= 128'h00000000000000000000000000000000;
     end
     else if(busy)
     begin
-        ct <= 'hdeadbeefdeadbeefdeadbeefdeadbeef;
+        ct <= 128'hdeadbeefdeadbeefdeadbeefdeadbeef;
         busy <= 0;
     end
 end
 */
-	reg ack_awvalid;
-	reg ack_arvalid;
-	reg ack_wvalid;
-	reg xfer_done;
 
-	assign mem_axi_awvalid = mem_valid && |mem_wstrb && !ack_awvalid;
-	assign mem_axi_awaddr = mem_addr;
-	assign mem_axi_awprot = 0;
+// on input from chipwhisperer over usb, start goes high. signal to picorv that read over AXI is valid and set "busy" output high
+// on input from picorv32 over AXI, load the AXI data in to "ct" output and set "busy" output low
+ 
+	reg [31:0]   memory [0:7]; // [0:3] for 128b plaintext, [4:7] for 128b ciphertext
 
-	assign mem_axi_arvalid = mem_valid && !mem_wstrb && !ack_arvalid;
-	assign mem_axi_araddr = mem_addr;
-	assign mem_axi_arprot = mem_instr ? 3'b100 : 3'b000;
+	reg latched_raddr_en = 0;
+	reg latched_waddr_en = 0;
+	reg latched_wdata_en = 0;
 
-	assign mem_axi_wvalid = mem_valid && |mem_wstrb && !ack_wvalid;
-	assign mem_axi_wdata = mem_wdata;
-	assign mem_axi_wstrb = mem_wstrb;
+	reg fast_raddr = 0;
+	reg fast_waddr = 0;
+	reg fast_wdata = 0;
 
-	assign mem_ready = mem_axi_bvalid || mem_axi_rvalid;
-	assign mem_axi_bready = mem_valid && |mem_wstrb;
-	assign mem_axi_rready = mem_valid && !mem_wstrb;
-	assign mem_rdata = mem_axi_rdata;
+	reg [31:0] latched_raddr;
+	reg [31:0] latched_waddr;
+	reg [31:0] latched_wdata;
+	reg [ 3:0] latched_wstrb;
+	reg        latched_rinsn;
+
+	reg [2:0] fast_axi_transaction = ~0;
+	reg [4:0] async_axi_transaction = ~0;
+	reg [4:0] delay_axi_transaction = 0;
+
+	task handle_axi_arvalid; begin
+		mem_axi_arready <= 1;
+		latched_raddr = mem_axi_araddr;
+		latched_rinsn = mem_axi_arprot[2];
+		latched_raddr_en = 1;
+		fast_raddr <= 1;
+	end endtask
+
+	task handle_axi_awvalid; begin
+		mem_axi_awready <= 1;
+		latched_waddr = mem_axi_awaddr;
+		latched_waddr_en = 1;
+		fast_waddr <= 1;
+	end endtask
+
+	task handle_axi_wvalid; begin
+		mem_axi_wready <= 1;
+		latched_wdata = mem_axi_wdata;
+		latched_wstrb = mem_axi_wstrb;
+		latched_wdata_en = 1;
+		fast_wdata <= 1;
+	end endtask
+
+	task handle_axi_rvalid; begin
+		if (latched_raddr < 4) begin
+			mem_axi_rdata <= memory[latched_raddr >> 2];
+			mem_axi_rvalid <= 1;
+			latched_raddr_en = 0;
+		end
+	end endtask
+
+	task handle_axi_bvalid; begin
+		if (latched_waddr < 64*1024) begin
+			if (latched_wstrb[0]) memory[latched_waddr >> 2][ 7: 0] <= latched_wdata[ 7: 0];
+			if (latched_wstrb[1]) memory[latched_waddr >> 2][15: 8] <= latched_wdata[15: 8];
+			if (latched_wstrb[2]) memory[latched_waddr >> 2][23:16] <= latched_wdata[23:16];
+			if (latched_wstrb[3]) memory[latched_waddr >> 2][31:24] <= latched_wdata[31:24];
+		end
+		mem_axi_bvalid <= 1;
+		latched_waddr_en = 0;
+		latched_wdata_en = 0;
+	end endtask
+
+	always @(negedge clk) begin
+		if (mem_axi_arvalid && !(latched_raddr_en || fast_raddr) && async_axi_transaction[0]) handle_axi_arvalid;
+		if (mem_axi_awvalid && !(latched_waddr_en || fast_waddr) && async_axi_transaction[1]) handle_axi_awvalid;
+		if (mem_axi_wvalid  && !(latched_wdata_en || fast_wdata) && async_axi_transaction[2]) handle_axi_wvalid;
+		if (!mem_axi_rvalid && latched_raddr_en && async_axi_transaction[3]) handle_axi_rvalid;
+		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && async_axi_transaction[4]) handle_axi_bvalid;
+	end
 
 	always @(posedge clk) begin
-		if (!resetn) begin
-			ack_awvalid <= 0;
-		end else begin
-			xfer_done <= mem_valid && mem_ready;
-			if (mem_axi_awready && mem_axi_awvalid)
-				ack_awvalid <= 1;
-			if (mem_axi_arready && mem_axi_arvalid)
-				ack_arvalid <= 1;
-			if (mem_axi_wready && mem_axi_wvalid)
-				ack_wvalid <= 1;
-			if (xfer_done || !mem_valid) begin
-				ack_awvalid <= 0;
-				ack_arvalid <= 0;
-				ack_wvalid <= 0;
-			end
+		mem_axi_arready <= 0;
+		mem_axi_awready <= 0;
+		mem_axi_wready <= 0;
+
+		fast_raddr <= 0;
+		fast_waddr <= 0;
+		fast_wdata <= 0;
+
+		if (mem_axi_rvalid && mem_axi_rready) begin
+			mem_axi_rvalid <= 0;
 		end
+
+		if (mem_axi_bvalid && mem_axi_bready) begin
+			mem_axi_bvalid <= 0;
+		end
+
+		if (mem_axi_arvalid && mem_axi_arready && !fast_raddr) begin
+			latched_raddr = mem_axi_araddr;
+			latched_rinsn = mem_axi_arprot[2];
+			latched_raddr_en = 1;
+		end
+
+		if (mem_axi_awvalid && mem_axi_awready && !fast_waddr) begin
+			latched_waddr = mem_axi_awaddr;
+			latched_waddr_en = 1;
+		end
+
+		if (mem_axi_wvalid && mem_axi_wready && !fast_wdata) begin
+			latched_wdata = mem_axi_wdata;
+			latched_wstrb = mem_axi_wstrb;
+			latched_wdata_en = 1;
+		end
+
+		if (mem_axi_arvalid && !(latched_raddr_en || fast_raddr) && !delay_axi_transaction[0]) handle_axi_arvalid;
+		if (mem_axi_awvalid && !(latched_waddr_en || fast_waddr) && !delay_axi_transaction[1]) handle_axi_awvalid;
+		if (mem_axi_wvalid  && !(latched_wdata_en || fast_wdata) && !delay_axi_transaction[2]) handle_axi_wvalid;
+
+		if (!mem_axi_rvalid && latched_raddr_en && !delay_axi_transaction[3]) handle_axi_rvalid;
+		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && !delay_axi_transaction[4]) handle_axi_bvalid;
 	end
 endmodule
