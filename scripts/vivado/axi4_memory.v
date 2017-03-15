@@ -2,6 +2,8 @@
 
 `timescale 1 ns / 1 ps
 
+`define MEMORY_SIZE 1152 //576 or 1152 words in memory
+
 module axi4_memory  
 (
 	input             clk,
@@ -27,7 +29,8 @@ module axi4_memory
 	input             mem_axi_rready,
 	output reg [31:0] mem_axi_rdata
 );
-	reg [31:0]   memory [0:64*1024/4-1] /* verilator public */;
+	//(*ram_style="block"*)
+	reg [31:0]   memory [0:`MEMORY_SIZE-9];//[0:64*1024/4-1] /* verilator public */;
 
 	reg latched_raddr_en = 0;
 	reg latched_waddr_en = 0;
@@ -43,8 +46,8 @@ module axi4_memory
 	reg [ 3:0] latched_wstrb;
 	reg        latched_rinsn;
 
-	reg [2:0] fast_axi_transaction = ~0;
-	reg [4:0] async_axi_transaction = ~0;
+//	reg [2:0] fast_axi_transaction = ~0;
+//	reg [4:0] async_axi_transaction = ~0;
 	reg [4:0] delay_axi_transaction = 0;
 
 	task handle_axi_arvalid; begin
@@ -71,7 +74,7 @@ module axi4_memory
 	end endtask
 
 	task handle_axi_rvalid; begin
-		if (latched_raddr < 64*1024) begin
+		if (latched_raddr < (`MEMORY_SIZE-8)/2) begin
 			mem_axi_rdata <= memory[latched_raddr >> 2];
 			mem_axi_rvalid <= 1;
 			latched_raddr_en = 0;
@@ -79,7 +82,7 @@ module axi4_memory
 	end endtask
 
 	task handle_axi_bvalid; begin
-		if (latched_waddr < 64*1024) begin
+		if (latched_waddr < (`MEMORY_SIZE-8)/2) begin
 			if (latched_wstrb[0]) memory[latched_waddr >> 2][ 7: 0] <= latched_wdata[ 7: 0];
 			if (latched_wstrb[1]) memory[latched_waddr >> 2][15: 8] <= latched_wdata[15: 8];
 			if (latched_wstrb[2]) memory[latched_waddr >> 2][23:16] <= latched_wdata[23:16];
@@ -90,14 +93,14 @@ module axi4_memory
 		latched_wdata_en = 0;
 	end endtask
 
-	always @(negedge clk) begin
-//		if (mem_axi_arvalid && !(latched_raddr_en || fast_raddr) && async_axi_transaction[0]) handle_axi_arvalid;
-//		if (mem_axi_awvalid && !(latched_waddr_en || fast_waddr) && async_axi_transaction[1]) handle_axi_awvalid;
-//		if (mem_axi_wvalid  && !(latched_wdata_en || fast_wdata) && async_axi_transaction[2]) handle_axi_wvalid;
-//		if (!mem_axi_rvalid && latched_raddr_en && async_axi_transaction[3]) handle_axi_rvalid;
-//		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && async_axi_transaction[4]) handle_axi_bvalid;
+/*	always @(negedge clk) begin
+		if (mem_axi_arvalid && !(latched_raddr_en || fast_raddr) && async_axi_transaction[0]) handle_axi_arvalid;
+		if (mem_axi_awvalid && !(latched_waddr_en || fast_waddr) && async_axi_transaction[1]) handle_axi_awvalid;
+		if (mem_axi_wvalid  && !(latched_wdata_en || fast_wdata) && async_axi_transaction[2]) handle_axi_wvalid;
+		if (!mem_axi_rvalid && latched_raddr_en && async_axi_transaction[3]) handle_axi_rvalid;
+		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && async_axi_transaction[4]) handle_axi_bvalid;
 	end
-
+*/
 	always @(posedge clk) begin
 		mem_axi_arready <= 0;
 		mem_axi_awready <= 0;
@@ -131,13 +134,12 @@ module axi4_memory
 			latched_wstrb = mem_axi_wstrb;
 			latched_wdata_en = 1;
 		end
-/*
+
 		if (mem_axi_arvalid && !(latched_raddr_en || fast_raddr) && !delay_axi_transaction[0]) handle_axi_arvalid;
 		if (mem_axi_awvalid && !(latched_waddr_en || fast_waddr) && !delay_axi_transaction[1]) handle_axi_awvalid;
 		if (mem_axi_wvalid  && !(latched_wdata_en || fast_wdata) && !delay_axi_transaction[2]) handle_axi_wvalid;
-
 		if (!mem_axi_rvalid && latched_raddr_en && !delay_axi_transaction[3]) handle_axi_rvalid;
 		if (!mem_axi_bvalid && latched_waddr_en && latched_wdata_en && !delay_axi_transaction[4]) handle_axi_bvalid;
-*/	
+	
 	end
 endmodule

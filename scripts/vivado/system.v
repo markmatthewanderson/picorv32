@@ -246,7 +246,7 @@ module system (
 
 ///// Following firmware read copied from non-AXI picorv instantiation
 	// 4096 32bit words = 16kB memory
-	//initial $readmemh("firmware.hex", mem.memory);
+	initial $readmemh("firmware.hex", mem.memory);
 ///// End copy from non-AXI picorv instantiation
 
 
@@ -335,34 +335,36 @@ module system (
     	wire cw305_axi_busy;
     	assign cw305_crypt_done = ~cw305_axi_busy;
     
- /*   	cw305_axi cw305_axi (
+    	cw305_axi cw305_axi (
         	//.clk(cw305_crypt_clk),
-        	//.start(cw305_crypt_start),
+        	.start(cw305_crypt_start),
         	//.key(cw305_crypt_key),
-        	//.pt(cw305_crypt_textout),
-        	//.ct(cw305_crypt_cipherin),
-        	//.busy(cw305_axi_busy)
-		.clk            (clk            ),
-		.resetn         (resetn         ),
-		.trap           (trap           ),
-		.mem_axi_awvalid(mem_axi_awvalid),
-		.mem_axi_awready(mem_axi_awready),
-		.mem_axi_awaddr (mem_axi_awaddr ),
-		.mem_axi_awprot (mem_axi_awprot ),
-		.mem_axi_wvalid (mem_axi_wvalid ),
-		.mem_axi_wready (mem_axi_wready ),
-		.mem_axi_wdata  (mem_axi_wdata  ),
-		.mem_axi_wstrb  (mem_axi_wstrb  ),
-		.mem_axi_bvalid (mem_axi_bvalid ),
-		.mem_axi_bready (mem_axi_bready ),
-		.mem_axi_arvalid(mem_axi_arvalid),
-		.mem_axi_arready(mem_axi_arready),
-		.mem_axi_araddr (mem_axi_araddr ),
-		.mem_axi_arprot (mem_axi_arprot ),
-		.mem_axi_rvalid (mem_axi_rvalid ),
-		.mem_axi_rready (mem_axi_rready ),
-		.mem_axi_rdata  (mem_axi_rdata  )
-    	);*/
+        	.pt(cw305_crypt_textout),
+        	.ct(cw305_crypt_cipherin),
+        	.busy(cw305_axi_busy),
+		.clk             (clk             ),
+		.mem_axi_awvalid (mem_axi_awvalid ),
+		.mem_axi_awready (mem_axi_awready ),
+		.mem_axi_awaddr  (mem_axi_awaddr  ),
+		.mem_axi_awprot  (mem_axi_awprot  ),
+
+		.mem_axi_wvalid  (mem_axi_wvalid  ),
+		.mem_axi_wready  (mem_axi_wready  ),
+		.mem_axi_wdata   (mem_axi_wdata   ),
+		.mem_axi_wstrb   (mem_axi_wstrb   ),
+
+		.mem_axi_bvalid  (mem_axi_bvalid  ),
+		.mem_axi_bready  (mem_axi_bready  ),
+
+		.mem_axi_arvalid (mem_axi_arvalid ),
+		.mem_axi_arready (mem_axi_arready ),
+		.mem_axi_araddr  (mem_axi_araddr  ),
+		.mem_axi_arprot  (mem_axi_arprot  ),
+
+		.mem_axi_rvalid  (mem_axi_rvalid  ),
+		.mem_axi_rready  (mem_axi_rready  ),
+		.mem_axi_rdata   (mem_axi_rdata   )
+    	);
          
    /******** END CRYPTO MODULE CONNECTIONS ****************/
 
