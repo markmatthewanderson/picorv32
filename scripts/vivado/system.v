@@ -173,10 +173,6 @@ module system (
 	wire [31:0] mem_axi_rdata;
 
 	axi4_memory 
-//#(
-		//.AXI_TEST (AXI_TEST),
-		//.VERBOSE  (VERBOSE)
-//	) mem 
 	mem (
 		.clk             (clk             ),
 		.mem_axi_awvalid (mem_axi_awvalid ),
@@ -201,7 +197,6 @@ module system (
 		.mem_axi_rready  (mem_axi_rready  ),
 		.mem_axi_rdata   (mem_axi_rdata   )
 
-		//.tests_passed    (tests_passed    )
 	);
 
 	picorv32_axi #(
@@ -232,9 +227,6 @@ module system (
 		.mem_axi_rvalid (mem_axi_rvalid ),
 		.mem_axi_rready (mem_axi_rready ),
 		.mem_axi_rdata  (mem_axi_rdata  )
-		//.irq            (irq            ),
-		//.trace_valid    (trace_valid    ),
-		//.trace_data     (trace_data     )
 	);
 
 /*	reg [1023:0] firmware_file;
@@ -336,12 +328,12 @@ module system (
     	assign cw305_crypt_done = ~cw305_axi_busy;
     
     	cw305_axi cw305_axi (
-        	//.clk(cw305_crypt_clk),
         	.start(cw305_crypt_start),
         	//.key(cw305_crypt_key),
         	.pt(cw305_crypt_textout),
         	.ct(cw305_crypt_cipherin),
         	.busy(cw305_axi_busy),
+
 		.clk             (clk             ),
 		.mem_axi_awvalid (mem_axi_awvalid ),
 		.mem_axi_awready (mem_axi_awready ),
