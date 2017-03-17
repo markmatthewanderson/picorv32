@@ -172,9 +172,31 @@ module system (
 	wire        mem_axi_rready;
 	wire [31:0] mem_axi_rdata;
 
+	wire        usb_axi_awvalid;
+	wire        usb_axi_awready;
+	wire [31:0] usb_axi_awaddr;
+	wire [ 2:0] usb_axi_awprot;
+
+	wire        usb_axi_wvalid;
+	wire        usb_axi_wready;
+	wire [31:0] usb_axi_wdata;
+	wire [ 3:0] usb_axi_wstrb;
+
+	wire        usb_axi_bvalid;
+	wire        usb_axi_bready;
+
+	wire        usb_axi_arvalid;
+	wire        usb_axi_arready;
+	wire [31:0] usb_axi_araddr;
+	wire [ 2:0] usb_axi_arprot;
+
+	wire        usb_axi_rvalid;
+	wire        usb_axi_rready;
+	wire [31:0] usb_axi_rdata;
+
 	axi4_memory 
 	mem (
-		.clk             (clk             ),
+		.clk             (cw305_crypt_clk),
 		.mem_axi_awvalid (mem_axi_awvalid ),
 		.mem_axi_awready (mem_axi_awready ),
 		.mem_axi_awaddr  (mem_axi_awaddr  ),
@@ -207,26 +229,26 @@ module system (
 		.ENABLE_IRQ(1),
 		.ENABLE_TRACE(1)
 	) uut (
-		.clk            (clk            ),
+		.clk            (cw305_crypt_clk),
 		.resetn         (resetn         ),
 		.trap           (trap           ),
 		.mem_axi_awvalid(mem_axi_awvalid),
-		.mem_axi_awready(mem_axi_awready),
+		.mem_axi_awready(mem_axi_awready || usb_axi_awready),
 		.mem_axi_awaddr (mem_axi_awaddr ),
 		.mem_axi_awprot (mem_axi_awprot ),
 		.mem_axi_wvalid (mem_axi_wvalid ),
-		.mem_axi_wready (mem_axi_wready ),
+		.mem_axi_wready (mem_axi_wready || usb_axi_wready),
 		.mem_axi_wdata  (mem_axi_wdata  ),
 		.mem_axi_wstrb  (mem_axi_wstrb  ),
-		.mem_axi_bvalid (mem_axi_bvalid ),
+		.mem_axi_bvalid (mem_axi_bvalid || usb_axi_bvalid),
 		.mem_axi_bready (mem_axi_bready ),
 		.mem_axi_arvalid(mem_axi_arvalid),
-		.mem_axi_arready(mem_axi_arready),
+		.mem_axi_arready(mem_axi_arready || usb_axi_arready),
 		.mem_axi_araddr (mem_axi_araddr ),
 		.mem_axi_arprot (mem_axi_arprot ),
-		.mem_axi_rvalid (mem_axi_rvalid ),
+		.mem_axi_rvalid (mem_axi_rvalid || usb_axi_rvalid),
 		.mem_axi_rready (mem_axi_rready ),
-		.mem_axi_rdata  (mem_axi_rdata  )
+		.mem_axi_rdata  (mem_axi_rvalid ? mem_axi_rdata : usb_axi_rdata)
 	);
 
 /*	reg [1023:0] firmware_file;
@@ -334,28 +356,28 @@ module system (
         	.ct(cw305_crypt_cipherin),
         	.busy(cw305_axi_busy),
 
-		.clk             (clk             ),
+		.clk             (cw305_crypt_clk),
 		.mem_axi_awvalid (mem_axi_awvalid ),
-		.mem_axi_awready (mem_axi_awready ),
+		.mem_axi_awready (usb_axi_awready ),
 		.mem_axi_awaddr  (mem_axi_awaddr  ),
 		.mem_axi_awprot  (mem_axi_awprot  ),
 
 		.mem_axi_wvalid  (mem_axi_wvalid  ),
-		.mem_axi_wready  (mem_axi_wready  ),
+		.mem_axi_wready  (usb_axi_wready  ),
 		.mem_axi_wdata   (mem_axi_wdata   ),
 		.mem_axi_wstrb   (mem_axi_wstrb   ),
 
-		.mem_axi_bvalid  (mem_axi_bvalid  ),
+		.mem_axi_bvalid  (usb_axi_bvalid  ),
 		.mem_axi_bready  (mem_axi_bready  ),
 
 		.mem_axi_arvalid (mem_axi_arvalid ),
-		.mem_axi_arready (mem_axi_arready ),
+		.mem_axi_arready (usb_axi_arready ),
 		.mem_axi_araddr  (mem_axi_araddr  ),
 		.mem_axi_arprot  (mem_axi_arprot  ),
 
-		.mem_axi_rvalid  (mem_axi_rvalid  ),
+		.mem_axi_rvalid  (usb_axi_rvalid  ),
 		.mem_axi_rready  (mem_axi_rready  ),
-		.mem_axi_rdata   (mem_axi_rdata   )
+		.mem_axi_rdata   (usb_axi_rdata   )
     	);
          
    /******** END CRYPTO MODULE CONNECTIONS ****************/

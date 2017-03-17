@@ -2,7 +2,7 @@
 
 `timescale 1 ns / 1 ps
 
-`define MEMORY_SIZE 1152 //576 or 1152 words in memory
+`define MEMORY_SIZE 1152 //576 or 1152 words in memory // if changing, also change in cw305_axi.v
 
 module axi4_memory  
 (
